@@ -1,0 +1,38 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go build output
+*.test
+*.out
+
+# Go modules
+vendor/
+
+# IDE/editor settings
+.vscode/
+.idea/
+*.iml
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+
+# Go workspaces (if you don't want to track them)
+go.work
+go.work.sum
+
+# Coverage and profiling
+coverage.out
+profile.out
+
+# Caddy (if you commit Caddy configs but not autosaved files)
+.caddy/
