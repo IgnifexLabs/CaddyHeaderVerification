@@ -210,6 +210,23 @@ func (h HeaderChecker) validateChromeAcceptHeader(r *http.Request) bool {
 
 }
 
+func (h HeaderChecker) DeterminUnRealisticHeaderCount(r *http.Request) bool {
+	// count header keys
+	count := len(r.Header)
+	if h.logger != nil {
+		h.logger.Info("header counting",
+			zap.Int("Header count is =", count),
+		)
+	}
+	if count < 7 {
+		return true
+	}
+	if count > 25 {
+		return true
+	}
+	return false
+}
+
 func (h HeaderChecker) validateFireFoxAcceptHeader(r *http.Request) bool {
 	var reFirefoxRange = regexp.MustCompile(`Firefox/(13[2-9]|1[4-9][0-9])\.0`)
 	const targetAccept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
@@ -378,13 +395,31 @@ func CheckSecCHDeviceMemoryequalto8(r *http.Request) bool {
 	return true
 }
 
+func (h HeaderChecker) validateAcceptLanguage(AcceptLanguage string) bool {
+	// Check for the existence of the Accept-Language. No header is a clear error
+	if strings.TrimSpace(AcceptLanguage) == "" {
+		if h.logger != nil {
+			h.logger.Warn("missing Accept-Language header",
+				zap.String("Accept-Language =", AcceptLanguage),
+			)
+		}
+		return true
+	}
+	return false
+}
+
 // ServeHTTP inspects the headers and then calls the next handler.
 func (h HeaderChecker) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
 	h.logRequest(r)
 	// Simple “is this Firefox at all?” check
 	var reFirefox = regexp.MustCompile(`Firefox/\d+\.\d+`)
 	var reChrome = regexp.MustCompile(`Chrome/\d+\.\d+`)
-
+	botdetected := false
+	if h.validateAcceptLanguage(r.Header.Get("Accept-Language")) {
+		if h.logger != nil {
+			h.logger.Warn("missing Accept-Language header")
+		}
+	}
 	if IsDevtoolsPath(r) {
 		if h.logger != nil {
 			h.logger.Warn("Someone is using the devtools block request",
@@ -392,8 +427,17 @@ func (h HeaderChecker) ServeHTTP(w http.ResponseWriter, r *http.Request, next ca
 			)
 		}
 	}
-
-	botdetected := false
+	HeaderCheckResult := useragent.ValidateHeaderLength(r.Header)
+	if HeaderCheckResult.WithinSpec == false {
+		if h.logger != nil {
+			h.logger.Warn("The browser requested more or to less headers then normal",
+				zap.String("Reason", HeaderCheckResult.Reason),
+				zap.String("Browser", string(HeaderCheckResult.Browser)),
+				zap.Int("headerlengt", HeaderCheckResult.HeaderLen),
+			)
+		}
+		botdetected = true
+	}
 	ua := r.Header.Get("User-Agent")
 	reduced := useragent.ValidateReduction(ua)
 	if useragent.IsOldBrowser(ua) {
