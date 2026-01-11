@@ -395,6 +395,16 @@ func CheckSecCHDeviceMemoryequalto8(r *http.Request) bool {
 	return true
 }
 
+func CheckCorrectAcceptEncodingCheck(r *http.Request) bool {
+	AcceptEncoding := r.Header.Get("Accept-Encoding")
+	// Perform a check for the default accept-encoding checks.
+	if AcceptEncoding == "gzip, deflate, br, zstd" {
+		return true
+	}
+
+	return false
+}
+
 func (h HeaderChecker) validateAcceptLanguage(AcceptLanguage string) bool {
 	// Check for the existence of the Accept-Language. No header is a clear error
 	if strings.TrimSpace(AcceptLanguage) == "" {

@@ -8,6 +8,20 @@ func TestValidateReduction(t *testing.T) {
 		ua   string
 		want bool
 	}{
+		{name: "iPhone with CriOS (should return true)",
+			ua:   "Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/119.0.6045.109 Mobile/15E148 Safari/604.1",
+			want: true,
+		},
+		{
+			name: "iPhone with EdgiOS (should return true)",
+			ua:   "Mozilla/5.0 (iPhone; CPU iPhone OS 26_1_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) EdgiOS/143.0.3650.130 Version/26.0 Mobile/15E148 Safari/604.1",
+			want: true,
+		},
+		{
+			name: "iPhone with no CriOS or EdgiOS (should return false)",
+			ua:   "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148",
+			want: false,
+		},
 		{
 			name: "Mac reduced UA (example)",
 			ua:   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
@@ -36,7 +50,7 @@ func TestValidateReduction(t *testing.T) {
 		{
 			name: "Upper/lowercase mismatch still matches",
 			ua:   "mozilla/5.0 (macintosh; intel mac os x 10_15_7) applewebkit/537.36",
-			want: true,
+			want: false,
 		},
 		{
 			name: "Non‑reduced Mac UA (different version)",
@@ -44,9 +58,14 @@ func TestValidateReduction(t *testing.T) {
 			want: false,
 		},
 		{
-			name: "Non‑reduced Iphpne ",
+			name: "Non‑reduced Iphone firefox IOS ",
 			ua:   "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/118.0 Mobile/15E148 Safari/605.1.15",
 			want: false,
+		},
+		{
+			name: "iPhone platform UA exact match should return true",
+			ua:   "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.1 Mobile/15E148 Safari/604.1",
+			want: true,
 		},
 		{
 			name: "Non‑reduced Android Linux",

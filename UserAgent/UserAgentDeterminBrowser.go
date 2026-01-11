@@ -47,7 +47,10 @@ func DetectBrowser(h http.Header) BrowserKind {
 
 	// 1) Firefox
 	if reFirefox.MatchString(ua) {
-		return BrowserFirefox
+		TeHttpheader := h.Get("Te")
+		if TeHttpheader == "trailers" {
+			return BrowserFirefox
+		}
 	}
 
 	// 2) Edge

@@ -10,6 +10,8 @@ const (
 	PlatformWindows  UserAgentReduction = "Windows NT 10.0; Win64; x64"
 	PlatformChromeOS UserAgentReduction = "X11; CrOS x86_64 14541.0.0"
 	PlatformLinux    UserAgentReduction = "X11; Linux x86_64"
+	PlatformIphone   UserAgentReduction = "iPhone; CPU iPhone OS 18_7 like Mac OS X"
+	PlatformIpad     UserAgentReduction = "iPad; CPU OS 18_7 like Mac OS X"
 )
 
 var allReducedPatterns = []UserAgentReduction{
@@ -18,13 +20,17 @@ var allReducedPatterns = []UserAgentReduction{
 	PlatformWindows,
 	PlatformChromeOS,
 	PlatformLinux,
+	PlatformIphone,
+	PlatformIpad,
 }
 
 func ValidateReduction(ua string) bool {
-	uaLower := strings.ToLower(ua)
+	if strings.Contains(ua, "Phone; CPU iPhone OS") && (strings.Contains(ua, "CriOS") || strings.Contains(ua, "EdgiOS")) {
+		return true
+	}
 
 	for _, pattern := range allReducedPatterns {
-		if strings.Contains(uaLower, strings.ToLower(string(pattern))) {
+		if strings.Contains(ua, string(pattern)) {
 			return true
 		}
 	}
