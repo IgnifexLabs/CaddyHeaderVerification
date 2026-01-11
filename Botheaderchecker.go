@@ -504,7 +504,15 @@ func (h HeaderChecker) ServeHTTP(w http.ResponseWriter, r *http.Request, next ca
 		}
 		botdetected = true
 	}
-
+	//validate the presence of the accept-charset header which is depricated by default
+	if r.Header.Get("Accept-Charset") != "" {
+		if h.logger != nil {
+			h.logger.Warn("Accept-Charset header detected which is depricated and therefor a bot is used",
+				zap.String("Accept-header=", r.Header.Get("Accept-Charset")),
+			)
+		}
+		botdetected = true
+	}
 	if reduced == false {
 		if h.logger != nil {
 			h.logger.Warn("User agent reduction error",
