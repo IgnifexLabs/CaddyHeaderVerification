@@ -1,8 +1,10 @@
 package headerchecker
 
 import (
+	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"go.uber.org/zap"
@@ -418,6 +420,50 @@ func (h HeaderChecker) validateAcceptLanguage(AcceptLanguage string) bool {
 	return false
 }
 
+func cleanHeaderValue(s string) string {
+	if unquoted, err := strconv.Unquote(s); err == nil {
+		return unquoted
+	}
+	return s
+}
+func hasOuterSpaces(s string) bool {
+	return s != strings.TrimSpace(s)
+}
+
+// ValidateClientHintWindowsPlatformVersion returns true if either:
+// - platform is not Windows (no check on version), we need to research how to validate other parts
+// - platform is Windows AND version is exactly "19.0.0".
+//
+// Returns false if platform is Windows but version is missing/incorrect.
+func ValidateClientHintWindowsPlatformVersion(platform string, platformVersion string) bool {
+
+	if platform != strings.TrimSpace(platform) || platformVersion != strings.TrimSpace(platformVersion) {
+		fmt.Println("DEBUG platform or version has illegal surrounding whitespace")
+		return false
+	}
+	platformlocal := cleanHeaderValue(platform)
+	versionlocal := cleanHeaderValue(platformVersion)
+
+	fmt.Println("DEBUG unquoted platform:", fmt.Sprintf("%q", platformlocal))
+	fmt.Println("DEBUG unquoted version :", fmt.Sprintf("%q", versionlocal))
+	if platformlocal == "" {
+		fmt.Println("DEBUG no platform atall return false")
+		return false
+	}
+	if platformlocal != "\"Windows\"" {
+		fmt.Println("DEBUG platform is not Windows → return true")
+		return true
+	}
+
+	if versionlocal == "19.0.0" {
+		fmt.Println("DEBUG Windows + version == 19.0.0 → return true")
+		return true
+	}
+
+	fmt.Println("DEBUG Windows + version != 19.0.0 → return false")
+	return false
+}
+
 // ServeHTTP inspects the headers and then calls the next handler.
 func (h HeaderChecker) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
 	h.logRequest(r)
@@ -479,6 +525,12 @@ func (h HeaderChecker) ServeHTTP(w http.ResponseWriter, r *http.Request, next ca
 		if CheckSecCHDeviceMemoryequalto8(r) == false {
 			if h.logger != nil {
 				h.logger.Warn("Memory of device lower then 8 high bot change")
+			}
+			botdetected = true
+		}
+		if ValidateClientHintWindowsPlatformVersion(r.Header.Get("Sec-CH-UA-Platform"), r.Header.Get("Sec-CH-UA-Platform-Version")) == false {
+			if h.logger != nil {
+				h.logger.Warn("Windows Platform version client hint is of (could be a patched puppeteer or some other system) ")
 			}
 			botdetected = true
 		}
