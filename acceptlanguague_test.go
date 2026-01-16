@@ -55,6 +55,10 @@ func TestValidateAcceptLanguage_NonEmpty(t *testing.T) {
 			name:           "multiple languages",
 			acceptLanguage: "nl,nl-NL;q=0.9,en-US;q=0.8,en;q=0.7",
 		},
+		{
+			name:           "multiple languages but contains a space",
+			acceptLanguage: "en-US, en; q=0.5",
+		},
 	}
 
 	for _, tt := range tests {

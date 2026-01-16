@@ -92,6 +92,7 @@ func brandVersion(s string) string {
 	}
 	return ""
 }
+
 func (h HeaderChecker) logRequest(r *http.Request) {
 	if h.logger == nil {
 		return
@@ -118,6 +119,32 @@ func (h HeaderChecker) logRequest(r *http.Request) {
 	)
 }
 
+func isScriptRequest(path, accept, contentType string) bool {
+	// Normalize
+	lowerPath := strings.ToLower(path)
+	lowerCT := strings.ToLower(contentType)
+	lowerAccept := strings.ToLower(accept)
+
+	// 1. Check file extension in the URL
+	if strings.HasSuffix(lowerPath, ".js") {
+		return true
+	}
+
+	//Content-Type is explicitly JavaScript
+	if strings.HasPrefix(lowerCT, "application/javascript") ||
+		strings.HasPrefix(lowerCT, "text/javascript") {
+		return true
+	}
+
+	// 3. Accept header indicates JavaScript is expected
+	if strings.Contains(lowerAccept, "application/javascript") ||
+		strings.Contains(lowerAccept, "text/javascript") {
+		return true
+	}
+
+	return false
+}
+
 // isImageRequest returns true if the request appears to be for an image,
 // either based on the URL or on the Accept header.
 func isImageRequest(path, accept, contentType string) bool {
@@ -140,6 +167,37 @@ func isImageRequest(path, accept, contentType string) bool {
 		return true
 	}
 
+	return false
+}
+
+func (h HeaderChecker) validateSecFetchRequests(r *http.Request) bool {
+	secFetchSite := r.Header.Get("Sec-Fetch-Site")
+	secFetchMode := r.Header.Get("Sec-Fetch-Mode")
+	secFetchDest := r.Header.Get("Sec-Fetch-Dest")
+
+	//If one of these headers are empty then it isn't a browser request
+	if secFetchSite == "" || secFetchMode == "" || secFetchDest == "" {
+		return false
+	}
+	accept := r.Header.Get("Accept")
+	path := r.URL.Path
+	ct := r.Header.Get("Content-Type")
+	if isImageRequest(path, accept, ct) {
+		//these are the standard expected headers for images hosted on your own site
+		if secFetchSite == "same-origin" && secFetchMode == "no-cors" && secFetchDest == "image" {
+			return true
+		} else {
+			return false
+		}
+	} else if isScriptRequest(path, accept, ct) {
+		if secFetchSite == "same-origin" && secFetchMode == "no-cors" && secFetchDest == "script" {
+			return true
+		} else {
+			return false
+		}
+	} else if secFetchSite == "none" && secFetchMode == "navigate" && secFetchDest == "document" {
+		return true
+	}
 	return false
 }
 
@@ -417,6 +475,15 @@ func (h HeaderChecker) validateAcceptLanguage(AcceptLanguage string) bool {
 		}
 		return true
 	}
+	for _, char := range AcceptLanguage {
+		if char == ' ' {
+			h.logger.Warn("Accept-Language header contains a space",
+				zap.String("Accept-Language =", AcceptLanguage),
+			)
+			return true
+		}
+
+	}
 	return false
 }
 
@@ -471,6 +538,16 @@ func (h HeaderChecker) ServeHTTP(w http.ResponseWriter, r *http.Request, next ca
 	var reFirefox = regexp.MustCompile(`Firefox/\d+\.\d+`)
 	var reChrome = regexp.MustCompile(`Chrome/\d+\.\d+`)
 	botdetected := false
+	if h.validateSecFetchRequests(r) {
+		if h.logger != nil {
+			h.logger.Warn("There is something strange with the Sec-Fetch headers",
+				zap.String("Sec-Fetch-Site", r.Header.Get("Sec-Fetch-Site")),
+				zap.String("Sec-Fetch-Mode", r.Header.Get("Sec-Fetch-Mode")),
+				zap.String("Sec-Fetch-Dest", r.Header.Get("Sec-Fetch-Dest")),
+			)
+		}
+	}
+
 	if h.validateAcceptLanguage(r.Header.Get("Accept-Language")) {
 		if h.logger != nil {
 			h.logger.Warn("missing Accept-Language header")

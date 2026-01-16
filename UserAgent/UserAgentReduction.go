@@ -25,7 +25,7 @@ var allReducedPatterns = []UserAgentReduction{
 }
 
 func ValidateReduction(ua string) bool {
-	if strings.Contains(ua, "Phone; CPU iPhone OS") && (strings.Contains(ua, "CriOS") || strings.Contains(ua, "EdgiOS")) {
+	if strings.Contains(ua, "iPhone; CPU iPhone OS") && (strings.Contains(ua, "CriOS") || strings.Contains(ua, "EdgiOS")) {
 		return true
 	}
 
