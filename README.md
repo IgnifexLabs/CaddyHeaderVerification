@@ -41,7 +41,7 @@ Enable the middleware in your Caddyfile for the sites or routes you want to prot
 It is important to change the order in the caddy File. for chromium based applications the client hints are a valuable item and should be integrated. 
 ```config
 {
-    order headerchecker before respond
+    order CaddyHeaderVerification before respond
 }
 
 :8080 {
@@ -49,7 +49,7 @@ It is important to change the order in the caddy File. for chromium based applic
         Accept-CH "Sec-CH-Device-Memory, Sec-CH-DPR, Sec-CH-Prefers-Color-Scheme, Sec-CH-Prefers-Reduced-Motion, Sec-CH-Prefers-Reduced-Transparency, Sec-CH-UA, Sec-CH-UA-Arch, Sec-CH-UA-Bitness, Sec-CH-UA-Form-Factors, Sec-CH-UA-Full-Version, Sec-CH-UA-Full-Version-List, Sec-CH-UA-Mobile, Sec-CH-UA-Model, Sec-CH-UA-Platform, Sec-CH-UA-Platform-Version, Sec-CH-UA-WoW64, Sec-CH-Viewport-Height, Sec-CH-Viewport-Width, Sec-CH-Width"
         Critical-CH "Sec-CH-Device-Memory, Sec-CH-DPR,Sec-CH-UA, Sec-CH-UA-Arch,Sec-CH-UA-Bitness,Sec-CH-UA-Full-Version, Sec-CH-UA-Full-Version-List, Sec-CH-UA-Mobile, Sec-CH-UA-Model, Sec-CH-UA-Platform, Sec-CH-UA-Platform-Version, Sec-CH-UA-WoW64, Sec-CH-Viewport-Height, Sec-CH-Viewport-Width, Sec-CH-Width"    
     }
-    headerchecker
+    CaddyHeaderVerification
     respond "OK"
 }
 ```
