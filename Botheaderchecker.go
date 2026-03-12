@@ -9,7 +9,7 @@ import (
 
 	"go.uber.org/zap"
 
-	useragent "github.com/beserkerbob/HeaderChecker/UserAgent"
+	useragent "github.com/IgnifexLabs/CaddyHeaderVerification/UserAgent"
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
 	"github.com/caddyserver/caddy/v2/caddyconfig/httpcaddyfile"
