@@ -1,4 +1,4 @@
-package headerchecker
+package CaddyHeaderVerification
 
 import (
 	"net/http"
