@@ -1,4 +1,4 @@
-module github.com/beserkerbob/HeaderChecker
+module github.com/IgnifexLabs/CaddyHeaderVerification
 
 go 1.25
 
